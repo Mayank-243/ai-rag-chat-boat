@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chatbot</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #efeae2;
+        }
+
+        .header {
+            background: #075e54;
+            color: white;
+            padding: 12px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 42px;
+            height: 42px;
+            background: #25d366;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            color: white;
+        }
+
+        .profile h3 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .profile small {
+            color: #d4f8df;
+        }
+
+        .logout {
+            color: white;
+            text-decoration: none;
+            background: #128c7e;
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .chat-container {
+            max-width: 900px;
+            margin: auto;
+            min-height: calc(100vh - 130px);
+            padding: 20px 14px 90px;
+        }
+
+        .chat-box {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .message {
+            max-width: 70%;
+            padding: 10px 12px;
+            border-radius: 10px;
+            font-size: 15px;
+            line-height: 1.4;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+            word-wrap: break-word;
+        }
+
+        .user {
+            align-self: flex-end;
+            background: #dcf8c6;
+            border-top-right-radius: 0;
+        }
+
+        .bot {
+            align-self: flex-start;
+            background: white;
+            border-top-left-radius: 0;
+        }
+
+        .sender {
+            font-weight: bold;
+            color: #075e54;
+            margin-bottom: 4px;
+        }
+
+        .message img {
+            margin-top: 8px;
+            width: 220px;
+            max-width: 100%;
+            border-radius: 8px;
+            display: block;
+        }
+
+        .time {
+            margin-top: 6px;
+            font-size: 11px;
+            color: #667781;
+            text-align: right;
+        }
+
+        .status {
+            font-size: 11px;
+            color: #667781;
+            margin-top: 5px;
+        }
+
+        .empty {
+            text-align: center;
+            background: #fff3cd;
+            color: #555;
+            padding: 10px 15px;
+            border-radius: 20px;
+            width: fit-content;
+            margin: 40px auto;
+        }
+
+        .chat-form {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: #f0f2f5;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+        }
+
+        .chat-form form {
+            width: 900px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chat-form input[type="text"] {
+            flex: 1;
+            padding: 13px 18px;
+            border-radius: 25px;
+            border: none;
+            outline: none;
+            font-size: 15px;
+            background: white;
+        }
+
+        .file-label {
+            background: white;
+            padding: 11px 13px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .chat-form input[type="file"] {
+            display: none;
+        }
+
+        .chat-form button {
+            width: 48px;
+            height: 48px;
+            border: none;
+            border-radius: 50%;
+            background: #25d366;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .chat-form button:hover {
+            background: #1ebe5d;
+        }
+
+        @media (max-width: 600px) {
+            .message {
+                max-width: 85%;
+            }
+
+            .profile h3 {
+                font-size: 16px;
+            }
+
+            .logout {
+                padding: 7px 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="header">
+    <div class="profile">
+        <div class="avatar">
+            {{ request.user.username|slice:":1"|upper }}
+        </div>
+        <div>
+            <h3>{{ request.user.username }}</h3>
+            <small>Online</small>
+        </div>
+    </div>
+
+    <a href="{% url 'logout' %}" class="logout">Logout</a>
+</div>
+
+<div class="chat-container">
+    <div class="chat-box">
+
+        {% for chat in chats %}
+
+            <div class="message user">
+                <div class="sender">You</div>
+                {{ chat.question }}
+
+                {% if chat.image %}
+                    <img src="{{ chat.image.url }}">
+                {% endif %}
+
+                <div class="time">{{ chat.created_at }}</div>
+            </div>
+
+            <div class="message bot">
+                <div class="sender">Bot </div>
+                {{ chat.answer }}
+
+                
+
+                <div class="time">{{ chat.created_at }}</div>
+            </div>
+
+        {% empty %}
+            <p class="empty">No chats yet Start your first message</p>
+        {% endfor %}
+
+    </div>
+</div>
+
+<div class="chat-form">
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <label class="file-label">
+            📎
+            <input type="file" name="image">
+        </label>
+
+        <input type="text" name="question" placeholder="Type a message..." required>
+
+        <button type="submit">➤</button>
+    </form>
+</div>
+
+</body>
+</html>
